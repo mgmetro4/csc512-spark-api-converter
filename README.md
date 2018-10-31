@@ -56,4 +56,33 @@ and it is populated until no new letter, underscore, or digit is found.
 populated until the end of line is reached.
 
 ## Grammar Description for Valid Input Files
-coming soon...
+
+### RDD to Dataset
+
+#### Transforming Rules
+RDD | Dataset
+------------ | ------------
+sc                    | spark
+range                 | range
+textFile              | read.textFile
+map                   | map
+filter                | filter
+reduce(<func>)        | select(reduceAggregator(<func>)).collect()
+reduceByKey(<func>)   | groupByKey(_._1).agg(reduceByKeyAggregator(<func>))
+sortBy(<func>)        | map(row=>((<func>)(row), row)).orderBy("_1").map(_._2)
+collect               | collect
+
+#### Grammar
+
+
+### RDD to Dataframe 
+
+####Transforming Rules
+RDD | Dataframe
+------------ | ------------
+sc           | spark
+range(m,n)   | range(m,n).selectExpr("id as _1")
+map(UDF)     | selectExpr(SQL)
+collect      | collect
+
+#### Grammar
