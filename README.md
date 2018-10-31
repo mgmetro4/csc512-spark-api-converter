@@ -77,7 +77,7 @@ collect               | collect
 
 ### RDD to Dataframe 
 
-####Transforming Rules
+#### Transforming Rules
 RDD | Dataframe
 ------------ | ------------
 sc           | spark
