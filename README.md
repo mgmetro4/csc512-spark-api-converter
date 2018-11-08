@@ -13,6 +13,8 @@ Use the ```make``` command to compile the program.  Alternatively, you can manua
 Run the executable named Main with the input filename as an argument.
 Eg: ```./Transformer [INPUT_FILE_NAME]```
 
+*NOTE: The transformer assumes that your input files use Unix line endings (LF), not DOS line endings (CRLF).  The tokenizer will not function correctly if DOS line endings are used.*
+
 The program will generate an output file with the name [INPUT_FILE_NAME_WITHOUT_FILE_EXTENSION]_gen.scala.  "Error" will be printed to standard out if the input file is not accepted by the Scanner.
 
 
@@ -75,7 +77,7 @@ collect               | collect
 #### Grammar
 
 
-### RDD to Dataframe 
+### RDD to Dataframe
 
 #### Transforming Rules
 RDD | Dataframe
