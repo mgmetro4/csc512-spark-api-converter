@@ -1,0 +1,5 @@
+# generated object files
+*.o
+
+# compiled program
+Transformer
