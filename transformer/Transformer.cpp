@@ -67,8 +67,9 @@ int main(int argc, char* argv[])
 		Token *t = scan.getNextToken();
 		if (t->getID() == Token::IDTYPE_INVALID)
 		{
-			delete t;
 			std::cout << "Error" << std::endl;
+			std::cout << *t << std::endl;
+			delete t;
 			return EXIT_FAILURE;
 		}
 		// print out the token
