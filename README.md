@@ -67,9 +67,9 @@ range                 | range
 textFile              | read.textFile
 map                   | map
 filter                | filter
-reduce(<func>)        | select(reduceAggregator(<func>)).collect()
-reduceByKey(<func>)   | groupByKey(_._1).agg(reduceByKeyAggregator(<func>))
-sortBy(<func>)        | map(row=>((<func>)(row), row)).orderBy("_1").map(_._2)
+reduce(\<func\>)        | select(reduceAggregator(\<func\>)).collect()
+reduceByKey(\<func\>)   | groupByKey(_._1).agg(reduceByKeyAggregator(\<func\>))
+sortBy(\<func\>)        | map(row=>((\<func\>)(row), row)).orderBy("\_1").map(\_._2)
 collect               | collect
 
 #### Grammar
