@@ -34,6 +34,8 @@ std::pair<bool, int> Util::isSymbol(std::string::iterator pos)
 		return std::pair<bool, int>(true, Token::SYMTYPE_STAR);
 	case '/':
 		return std::pair<bool, int>(true, Token::SYMTYPE_FORWARD_SLASH);
+	case '%':
+		return std::pair<bool, int>(true, Token::SYMTYPE_PERCENT);
 	case '#':				/**
 							 * # is treated as symbol and later a call to isMetaChar
 							 * will differentiate it from the actual set of symbols

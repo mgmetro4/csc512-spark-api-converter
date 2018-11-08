@@ -44,6 +44,7 @@ public:
 		SYMTYPE_MINUS,              // -
 		SYMTYPE_STAR,               // *
 		SYMTYPE_FORWARD_SLASH,      // /
+		SYMTYPE_PERCENT,            // %
 		SYMTYPE_ARROW,              // =>
 		SYMTYPE_DOUBLE_EQUAL,       // ==
 		SYMTYPE_NT_EQUAL,           // !=
