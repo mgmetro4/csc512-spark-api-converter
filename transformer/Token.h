@@ -40,6 +40,7 @@ public:
 		SYMTYPE_PERIOD,             // .
 		SYMTYPE_COMMA,              // ,
 		SYMTYPE_SEMICOLON,          // ;
+		SYMTYPE_COLON,              // :
 		SYMTYPE_PLUS,               // +
 		SYMTYPE_MINUS,              // -
 		SYMTYPE_STAR,               // *

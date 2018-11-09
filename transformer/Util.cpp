@@ -26,6 +26,8 @@ std::pair<bool, int> Util::isSymbol(std::string::iterator pos)
 		return std::pair<bool, int>(true, Token::SYMTYPE_COMMA);
 	case ';':
 		return std::pair<bool, int>(true, Token::SYMTYPE_SEMICOLON);
+	case ':':
+		return std::pair<bool, int>(true, Token::SYMTYPE_COLON);
 	case '+':
 		return std::pair<bool, int>(true, Token::SYMTYPE_PLUS);
 	case '-':
