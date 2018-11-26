@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include "Scanner.h"
-// #include "Parser.h"
+#include "Parser.h"
 #include "Util.h"
 
 /**
@@ -58,10 +58,10 @@ int main(int argc, char* argv[])
 	genOutFileName(argv[1], outFileName);
 	std::ofstream outFile(outFileName.c_str(), std::ifstream::out);
 
-	// Grammar *cGrammar = new Grammar(&outFile); // object memory is on heap
-	// SymbolTable *newSymbolTable = new SymbolTable(); // object memory is on heap
-	// Parser parse(cGrammar, newSymbolTable); // object memory is on stack
+	Grammar *cGrammar = new Grammar(&outFile); // object memory is on heap
+	Parser parse(cGrammar); // object memory is on stack
 
+	// scan through the file while loading tokens into the parser
 	while (scan.hasNextToken()) // while there are more tokens
 	{
 		Token *t = scan.getNextToken();
@@ -75,14 +75,20 @@ int main(int argc, char* argv[])
 		// print out the token
 		std::cout << *t << std::endl;
 
-		// parse.addToken(t);
+		// load the token into the parser's token list
+		parse.addToken(t);
 	}
 
-	// if (!parse.parseProgram())
-	// {
-	// 	std::cout << "Error" << std::endl;
-	// 	return EXIT_FAILURE;
-	// }
+	// parse the program based on the tokens loaded in the parser
+	if (!parse.parseProgram()) // if the program cannot be parsed
+	{
+		std::cout << "Error" << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
+	std::cout << "The input file \"" << argv[1] << "\" was successfully transformed." << std::endl;
+	std::cout << "The output file is \"" << outFileName << "\"." << std::endl;
 }
 
 

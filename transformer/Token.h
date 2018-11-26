@@ -3,6 +3,7 @@
 
 #include <string>
 
+// serves as a simple data store for a token found in the input file by the scanner
 class Token
 {
 private:
