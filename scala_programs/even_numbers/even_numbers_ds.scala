@@ -1,6 +1,5 @@
-/* Dataset 
- * Filter out and collect all even numbers in the range */
+//Dataset
  
 spark.range(0, 101)
-    .filter(i => i%2 == 0)
-    .collect()
+	.filter( i => (i%2 == 0) )
+	.collect()

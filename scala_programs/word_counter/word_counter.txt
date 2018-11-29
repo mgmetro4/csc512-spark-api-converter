@@ -1,0 +1,31 @@
+Word Counter - Test Case 1 - Working
+
+Description: Counter the number of words
+
+
+RDD
+words.txt = echo “one two three” > words.txt
+
+sc.textFile("words.txt")
+.map(line => line.split(" ").size)
+.reduce( (a:Int, b:Int) => a+b )
+
+Output: Int = 3 (cannot .collect() this)
+
+
+Dataset
+spark.read.textFile("words.txt")
+.map(l => l.split(" ").size)
+.select(reduceAggregator( (a:Int, b:Int) => a+b )).collect() 
+
+Output: Array[Int] = Array(3)
+
+
+Dataframe
+spark.read.text("words.txt")
+.selectExpr("sum(size(split(value,' ')))")
+.as[Long].first
+
+Output: Long = 3
+
+** add .toInt at the end to get Int = 3

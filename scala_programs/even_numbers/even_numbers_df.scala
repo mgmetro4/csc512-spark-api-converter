@@ -1,6 +1,5 @@
-/* Dataframe
- * Filter out and collect all even numbers in the range */
+//Dataframe
 
-spark.range(0, 101).selectExpr("id as _1")
-    .selectExpr("if(_1%2==0) _i) as _i" ) //cannot get this to work. filter i%2==0
-    .collect()
+spark.range(0, 51).selectExpr("id as _1")
+	.where(“_1%2==0”)
+	.collect()
