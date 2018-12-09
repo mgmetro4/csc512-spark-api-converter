@@ -28,7 +28,7 @@ spark.range(0,10)
 Output: Array[Long] = Array(5, 4, 6, 0, 3, 9, 7, 1, 2, 8)
 
 
-Dataframe
+Dataframe - the _1 is the Ints that are in order by sin value in _2
 
 spark.range(0,10).selectExpr("id as _1")
     .selectExpr("_1 as _1", "if(_1==_1,SIN(_1),SIN(_1)) as _2")
