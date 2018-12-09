@@ -1,7 +1,7 @@
 //RDD
 
 sc.range(0,50)
-  .map(a => a*10)
+  .map(a => a+3)
   .filter( a => (a%15)==0 )
   .sortBy( (a:Long) => a )
-  .reduce( (a:Long, b:Long) => a-b)
+  .reduce( (a:Long, b:Long) => a+b)
