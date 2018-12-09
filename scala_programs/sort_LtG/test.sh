@@ -1,6 +1,6 @@
 #!/bin/bash
-(
 
+(
 
 (cat sort_LtG_rdd.scala; echo) | (
     while read line
