@@ -5,14 +5,12 @@
 *				 It provides the interface to the grammer to access the next token, update the count of variables, function,
 *				 and statments.
 */
-#ifndef _PRASER_H
-#define _PRASER_H
+#ifndef _PARSER_H
+#define _PARSER_H
 
 #include <vector>
 #include "Token.h"
 #include "Grammar.h"
-
-class Grammar;
 
 class Parser
 {

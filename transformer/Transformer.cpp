@@ -5,6 +5,9 @@
 #include "Scanner.h"
 #include "Parser.h"
 #include "Util.h"
+#include "Grammar.h"
+#include "RDDToDSGrammar.h"
+#include "RDDToDFGrammar.h"
 
 /**
  * Creates a string representing an output file name based on the input file name;
@@ -44,22 +47,37 @@ void genOutFileName(char *input, std::string &output)
  */
 int main(int argc, char* argv[])
 {
-	if (argc != 2)
+	if (argc != 3)
 	{
-		std::cout << "Invalid number of arguments." << std::endl << "Usage:\t./Transformer <InputFileName>" << std::endl;
+		std::cout << "Invalid number of arguments." << std::endl << "Usage:\t./Transformer -ds|-df <InputFileName>" << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	if (strcmp(argv[1], "-ds") && strcmp(argv[1], "-df"))
+	{
+		std::cout << "Invalid conversion option." << std::endl << "You must specify if you want to convert to dataset (-ds) or dataframe (-df)." << std::endl;
 		return EXIT_FAILURE;
 	}
 
 	// initialize a scanner for the input file
-	Scanner scan(argv[1]); // object memory is on stack
+	Scanner scan(argv[2]); // object memory is on stack
 
 	// create stream to output file
 	std::string outFileName;
-	genOutFileName(argv[1], outFileName);
+	genOutFileName(argv[2], outFileName);
 	std::ofstream outFile(outFileName.c_str(), std::ifstream::out);
 
-	Grammar *cGrammar = new Grammar(&outFile); // object memory is on heap
-	Parser parse(cGrammar); // object memory is on stack
+	Grammar *gram = NULL;
+	if (!strcmp(argv[1], "-ds"))
+	{
+		gram = new RDDToDSGrammar(&outFile); // object memory is on heap
+	}
+	else
+	{
+		gram = new RDDToDFGrammar(&outFile); // object memory is on heap
+	}
+
+	Parser parse(gram); // object memory is on stack
 
 	// scan through the file while loading tokens into the parser
 	while (scan.hasNextToken()) // while there are more tokens
@@ -67,7 +85,7 @@ int main(int argc, char* argv[])
 		Token *t = scan.getNextToken();
 		if (t->getID() == Token::IDTYPE_INVALID)
 		{
-			std::cout << "Error" << std::endl;
+			std::cout << "Error while scanning" << std::endl;
 			std::cout << *t << std::endl;
 			delete t;
 			return EXIT_FAILURE;
@@ -82,7 +100,7 @@ int main(int argc, char* argv[])
 	// parse the program based on the tokens loaded in the parser
 	if (!parse.parseProgram()) // if the program cannot be parsed
 	{
-		std::cout << "Error" << std::endl;
+		std::cout << "Error while parsing" << std::endl;
 		return EXIT_FAILURE;
 	}
 

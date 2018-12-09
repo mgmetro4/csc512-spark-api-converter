@@ -2,8 +2,8 @@
 # If g++ is not found, then update the path below to point to g++ on your system.
 cc=/usr/bin/g++
 
-all: Transformer Scanner Token Util Parser Grammar
-	$(cc) -o Transformer Transformer.o Scanner.o Token.o Util.o Parser.o Grammar.o
+all: Transformer Scanner Token Util Parser RDDToDSGrammar RDDToDFGrammar
+	$(cc) -o Transformer Transformer.o Scanner.o Token.o Util.o Parser.o RDDToDSGrammar.o RDDToDFGrammar.o
 Transformer: Transformer.cpp
 	$(cc) -c Transformer.cpp
 Scanner: Scanner.cpp
@@ -14,7 +14,9 @@ Util: Util.cpp
 	$(cc) -c Util.cpp
 Parser: Parser.cpp
 	$(cc) -c Parser.cpp
-Grammar: Grammar.cpp
-	$(cc) -c Grammar.cpp
+RDDToDSGrammar: RDDToDSGrammar.cpp
+	$(cc) -c RDDToDSGrammar.cpp
+RDDToDFGrammar: RDDToDFGrammar.cpp
+	$(cc) -c RDDToDFGrammar.cpp
 clean:
 	-rm -f Transformer *.o
