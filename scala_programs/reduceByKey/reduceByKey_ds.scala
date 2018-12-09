@@ -1,4 +1,4 @@
-/* reduceByKey Example Dataset */
+//Dataset
 spark.range(1,10000000)
 	.map(i=>(i%11, 1))
 	.groupByKey(_._1)
