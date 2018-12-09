@@ -20,6 +20,13 @@ echo -e "\04"
 	done
 )
 
+(cat three_chainable_df.scala; echo) | (
+    while read line
+    do
+        echo "$line"
+    done
+)
+
 
 
 ) | spark-shell
