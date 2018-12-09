@@ -12,5 +12,10 @@ def day(date: String) = {
     } 
     count += 1
   }
-  ret.toInt
+  if(ret(0) == '0') {
+    ret.substring(1, 2)
+  }
+  else {
+    ret
+  }
 }
