@@ -3,4 +3,4 @@
 
 sc.range(1,2000)
   .collect()
-  .reduce(UDF)
+  .map(i => i * 2)
