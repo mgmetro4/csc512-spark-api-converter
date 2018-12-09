@@ -5,7 +5,7 @@ def rpad(str: String, len: Int, pad: String) = {
   var diff = 0
 
   if( len <= str.size ) {
-    ret = str.substring(0, len-1)
+    ret = str.substring(0, len)
   } 
   else {
     ret += str
