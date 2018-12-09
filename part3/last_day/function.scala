@@ -5,20 +5,18 @@ def last_day(date: String) = {
   var year = 0
   var char = date.substring(0, 1)
 
- 
  while( char != "-") {
     count +=1
     char = date.substring(count, count+1)
   }
   month = (date.substring(count+1, count+3)).toInt
 
-  
-
+  //find last day from "counting months on your knuckles" trick
   if(month < 8) {
     if(month%2 != 0) {
       ret = "31"
     }
-    else if (month == 2) {
+    else if (month == 2) { //FEBURARY - LEAP YEAR??
       count = 0
       char = date.substring(0,1)
        while( char != "-") {
@@ -47,5 +45,6 @@ def last_day(date: String) = {
       ret = "30"
     }
   }
-  var answer = date.substring(0,8) + ret
+  date.substring(0,8) + ret
+  
 }
