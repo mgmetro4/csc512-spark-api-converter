@@ -1,6 +1,15 @@
 Dataframe Example - Test Case 2 - Working
 
-Description: Test Case for Dataframe taken off project PDF. Uses an if-else condition to determine value
+Description: Test Case for Dataframe taken off project PDF. 
+             Uses an if-else condition to determine value
+
+
+To Run: bash test.sh
+
+
+
+Example Output: 
+
 
 RDD
 

@@ -1,7 +1,4 @@
-// RDD
-
-// words.txt = echo “one two three” > words.txt
-
+//RDD
 sc.textFile("words.txt")
 	.map(line => line.split(" ").size)
 	.reduce( (a:Int, b:Int) => a+b )
