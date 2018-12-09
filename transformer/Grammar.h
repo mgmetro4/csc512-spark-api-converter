@@ -23,13 +23,29 @@ public:
 
 	bool dataset0();
 
+	bool range();
+
+	bool textFile();
+
+	bool chainordone();
+
+	bool chainordone0();
+
 	bool chainable();
 
-	bool chainable0();
+	bool map();
+
+	bool filter();
+
+	bool sort();
 
 	bool done();
 
-	bool done0();
+	bool reduce();
+
+	bool collect();
+
+	bool UDF(std::string &datatype);
 
 	void instantiateParser(Parser* newParser);
 
