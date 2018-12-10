@@ -302,11 +302,12 @@ bool RDDToDSGrammar::chainable()
 
 /**
  * Production:
- * <map> --> map ( <UDF> )
+ * <map> --> map ( <mapUDF> )
  *           [FIRST_PLUS = { map }]
  */
 bool RDDToDSGrammar::map()
 {
+	// if the map keyword is found
 	if (parse->curToken()
 		&& parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
 		&& !strcmp(parse->curToken()->getTokenName().c_str(), "map"))
@@ -318,9 +319,9 @@ bool RDDToDSGrammar::map()
 		{
 			*outFile << parse->curToken()->getTokenName(); // print it to the output file
 			std::string userFunction;
-			// if a UDF is found
+			// if a mapUDF is found
 			if (parse->nextToken()
-				&& UDF(userFunction))
+				&& mapUDF(userFunction))
 			{
 				*outFile << userFunction; // print it to the output file
 				// if a right parenthesis is found
@@ -339,11 +340,12 @@ bool RDDToDSGrammar::map()
 
 /**
  * Production:
- * <filter> --> filter ( <UDF> )
+ * <filter> --> filter ( <filterUDF> )
  *              [FIRST_PLUS = { filter }]
  */
 bool RDDToDSGrammar::filter()
 {
+	// if the filter keyword is found
 	if (parse->curToken()
 		&& parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
 		&& !strcmp(parse->curToken()->getTokenName().c_str(), "filter"))
@@ -355,9 +357,9 @@ bool RDDToDSGrammar::filter()
 		{
 			*outFile << parse->curToken()->getTokenName(); // print it to the output file
 			std::string userFunction;
-			// if a UDF is found
+			// if a filter UDF is found
 			if (parse->nextToken()
-				&& UDF(userFunction))
+				&& filterUDF(userFunction))
 			{
 				*outFile << userFunction; // print it to the output file
 				// if a right parenthesis is found
@@ -376,13 +378,14 @@ bool RDDToDSGrammar::filter()
 
 /**
  * Production:
- * <sort> --> sortBy ( <UDF> )
+ * <sort> --> sortBy ( <sortByUDF> )
  *           [FIRST_PLUS = { sortBy }]
  *
  * This transforms "sortBy(<func>)" to "map(row=>((<func>)(row), row)).orderBy("_1").map(_._2)" in the output file.
  */
 bool RDDToDSGrammar::sort()
 {
+	// if the sortBy keyword is found
 	if (parse->curToken()
 		&& parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
 		&& !strcmp(parse->curToken()->getTokenName().c_str(), "sortBy"))
@@ -392,9 +395,9 @@ bool RDDToDSGrammar::sort()
 			&& parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS)
 		{
 			std::string userFunction;
-			// if a UDF is found
+			// if a sortBy UDF is found
 			if (parse->nextToken()
-				&& UDF(userFunction))
+				&& sortByUDF(userFunction))
 			{
 				// if a right parenthesis is found
 				if (parse->curToken()
@@ -443,9 +446,9 @@ bool RDDToDSGrammar::done()
 
 /**
  * Production:
- * <reduce> --> reduce ( <UDF> )
+ * <reduce> --> reduce ( <reduceUDF> )
  *              [FIRST_PLUS = { reduce }]
- *            | reduceByKey ( <UDF> )
+ *            | reduceByKey ( <reduceUDF> )
  *              [FIRST_PLUS = { reduceByKey }]
  * This transforms "reduce(<func>)" to "select(reduceAggregator(<func>)).collect()" in the output file.
  * This transforms "reduceByKey(<func>)" to "groupByKey(_._1).agg(reduceByKeyAggregator(<func>))" in the output file.
@@ -462,9 +465,9 @@ bool RDDToDSGrammar::reduce()
 			&& parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS)
 		{
 			std::string userFunction;
-			// if a UDF is found
+			// if a reduce UDF is found
 			if (parse->nextToken()
-				&& UDF(userFunction))
+				&& reduceUDF(userFunction))
 			{
 				// if a right parenthesis is found
 				if (parse->curToken()
@@ -487,9 +490,9 @@ bool RDDToDSGrammar::reduce()
 			&& parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS)
 		{
 			std::string userFunction;
-			// if a UDF is found
+			// if a reduce UDF is found
 			if (parse->nextToken()
-				&& UDF(userFunction))
+				&& reduceUDF(userFunction))
 			{
 				// if a right parenthesis is found
 				if (parse->curToken()
@@ -537,10 +540,10 @@ bool RDDToDSGrammar::collect()
 
 /**
  * Production:
- * <UDF> --> <identifier> => <statementBlock>
- *           [FIRST_PLUS = { <identifier> }]
+ * <mapUDF> --> <id> => <exprTupleBlock>
+ *              [FIRST_PLUS = { <id> }]
  */
-bool RDDToDSGrammar::UDF(std::string &udfString)
+bool RDDToDSGrammar::mapUDF(std::string &udfString)
 {
 	// if an identifier is found
 	if (parse->curToken()
@@ -552,31 +555,31 @@ bool RDDToDSGrammar::UDF(std::string &udfString)
 			&& parse->curToken()->getSymType() == Token::SYMTYPE_ARROW)
 		{
 			udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
-			// if a statement block is found
+			// if an expression tuple block is found
 			if (parse->nextToken()
 				&& (parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_BRACE
 				|| parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS
 				|| parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
 				|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
 				|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
-				&& statementBlock(udfString))
+				&& exprTupleBlock(udfString))
 			{
 				return true;
 			}
 		}
 	}
-	*outFile << std::endl << "<<<<<<ERROR>>>>>>" << udfString << std::endl;
+	*outFile << std::endl << "<<<<<<ERROR>>>>>>" << std::endl << udfString << std::endl;
   return false;
 }
 
 /**
  * Production:
- * <statementBlock> --> { <assignOrStmt> }
+ * <exprTupleBlock> --> { <assignThenExprTuple> }
  *                      [FIRST_PLUS = { { }]
- *                    | <statement>
- *                      [FIRST_PLUS = { <identifier>, <number>, (, if }]
+ *                    | <exprTuple>
+ *                      [FIRST_PLUS = { <id>, <number>, (, if }]
  */
-bool RDDToDSGrammar::statementBlock(std::string &udfString)
+bool RDDToDSGrammar::exprTupleBlock(std::string &udfString)
 {
 	// if a left curly brace is found
 	if (parse->curToken()
@@ -585,7 +588,7 @@ bool RDDToDSGrammar::statementBlock(std::string &udfString)
 		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
 		// if assignments or statements are found
 		if (parse->nextToken()
-			&& assignOrStmt(udfString))
+			&& assignThenExprTuple(udfString))
 		{
 			// if a right curly brace is found
 			if (parse->curToken()
@@ -597,13 +600,13 @@ bool RDDToDSGrammar::statementBlock(std::string &udfString)
 			}
 		}
 	}
-	// else if a statement is found
+	// else if an expression or tuple is found
 	else if (parse->curToken()
 		&& (parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS
 		|| parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
 		|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
 		|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
-		&& statement(udfString))
+		&& exprTuple(udfString))
 	{
 		return true;
 	}
@@ -612,55 +615,38 @@ bool RDDToDSGrammar::statementBlock(std::string &udfString)
 
 /**
  * Production:
- * <assignOrStmt> --> <assignments>
- *                    [FIRST_PLUS = { val }]
- *                  | <statement>
- *                    [FIRST_PLUS = { <identifier>, <number>, (, if }]
+ * <assignThenExprTuple> --> <assignment> <assignThenExprTuple>
+ *                           [FIRST_PLUS = { val }]
+ *                         | <exprTuple>
+ *                           [FIRST_PLUS = { <id>, <number>, (, if }]
  */
-bool RDDToDSGrammar::assignOrStmt(std::string &udfString)
+bool RDDToDSGrammar::assignThenExprTuple(std::string &udfString)
 {
 	// *outFile << "<<<<<<622>>>>>>" << parse->curToken()->getTokenName();
 	// *outFile << "<<<<<<622 CUR STRING>>>>>>" << udfString << std::endl;
-	// if assignments are found
-	if (parse->curToken()
-		&& !strcmp(parse->curToken()->getTokenName().c_str(), "val")
-		&& assignments(udfString))
-	{
-		return true;
-	}
-	// else if a statement is found
-	else if (parse->curToken()
-		&& (parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS
-		|| parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
-		|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
-		|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
-		&& statement(udfString))
-	{
-		// *outFile << "<<<<<<639>>>>>>" << parse->curToken()->getTokenName();
-		// *outFile << "<<<<<<639 CUR STRING>>>>>>" << udfString << std::endl;
-		return true;
-	}
-	return false;
-}
-
-/**
- * Production:
- * <assignments> --> <assignment> <assignOrStmt>
- *                   [FIRST_PLUS = { val }]
- */
-bool RDDToDSGrammar::assignments(std::string &udfString)
-{
 	// if an assignment is found
 	if (parse->curToken()
 		&& !strcmp(parse->curToken()->getTokenName().c_str(), "val")
 		&& assignment(udfString))
 	{
-		// if assignments or statements are found
+		// if assignments or expression or tuple are found
 		if (parse->curToken()
-			&& assignOrStmt(udfString))
+			&& assignThenExprTuple(udfString))
 		{
 			return true;
 		}
+	}
+	// else if an expression or tuple is found
+	else if (parse->curToken()
+		&& (parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS
+		|| parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
+		|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
+		|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
+		&& exprTuple(udfString))
+	{
+		// *outFile << "<<<<<<639>>>>>>" << parse->curToken()->getTokenName();
+		// *outFile << "<<<<<<639 CUR STRING>>>>>>" << udfString << std::endl;
+		return true;
 	}
 	return false;
 }
@@ -710,12 +696,12 @@ bool RDDToDSGrammar::assignment(std::string &udfString)
 
 /**
  * Production:
- * <statement> --> <noParenExpr>
+ * <exprTuple> --> <noParenExpr>
  *                 [FIRST_PLUS = { <identifier>, <number>, if }]
  *               | ( <expression> <parenExprOrTuple>
  *                 [FIRST_PLUS = { ( }]
  */
-bool RDDToDSGrammar::statement(std::string &udfString)
+bool RDDToDSGrammar::exprTuple(std::string &udfString)
 {
 	// if a no paren expression is found
 	if (parse->curToken()
@@ -839,6 +825,356 @@ bool RDDToDSGrammar::tuple0(std::string &udfString)
 		return true;
 	}
 	return false;
+}
+
+/**
+ * Production:
+ * <filterUDF> --> <id> => <boolExprBlock>
+ *                 [FIRST_PLUS = { <id> }]
+ */
+bool RDDToDSGrammar::filterUDF(std::string &udfString)
+{
+	// if an identifier is found
+	if (parse->curToken()
+		&& parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER)
+	{
+		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		// if an arrow is found
+		if (parse->nextToken()
+			&& parse->curToken()->getSymType() == Token::SYMTYPE_ARROW)
+		{
+			udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+			// if a boolean expression block is found
+			if (parse->nextToken()
+				&& (parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_BRACE
+				|| parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS
+				|| parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
+				|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
+				|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
+				&& boolExprBlock(udfString))
+			{
+				return true;
+			}
+		}
+	}
+	*outFile << std::endl << "<<<<<<ERROR>>>>>>" << udfString << std::endl;
+  return false;
+}
+
+/**
+ * Production:
+ * <boolExprBlock> --> { <assignThenBoolExpr> }
+ *                     [FIRST_PLUS = { { }]
+ *                   | <boolExpr>
+ *                     [FIRST_PLUS = { <id>, <number>, (, if }]
+ */
+bool RDDToDSGrammar::boolExprBlock(std::string &udfString)
+{
+	// if a left curly brace is found
+	if (parse->curToken()
+		&& parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_BRACE)
+	{
+		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		// if assignments or a boolean expression are found
+		if (parse->nextToken()
+			&& assignThenBoolExpr(udfString))
+		{
+			// if a right curly brace is found
+			if (parse->curToken()
+				&& parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_BRACE)
+			{
+				udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+				parse->nextToken();
+				return true;
+			}
+		}
+	}
+	// else if a boolean expression is found
+	else if (parse->curToken()
+		&& (parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS
+		|| parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
+		|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
+		|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
+		&& boolExpr(udfString))
+	{
+		return true;
+	}
+	return false;
+}
+
+/**
+ * Production:
+ * <assignThenBoolExpr> --> <assignment> <assignThenBoolExpr>
+ *                         [FIRST_PLUS = { val }]
+ *                       | <boolExpr>
+ *                         [FIRST_PLUS = { <id>, <number>, (, if }]
+ */
+bool RDDToDSGrammar::assignThenBoolExpr(std::string &udfString)
+{
+	// *outFile << "<<<<<<622>>>>>>" << parse->curToken()->getTokenName();
+	// *outFile << "<<<<<<622 CUR STRING>>>>>>" << udfString << std::endl;
+	// if an assignment is found
+	if (parse->curToken()
+		&& !strcmp(parse->curToken()->getTokenName().c_str(), "val")
+		&& assignment(udfString))
+	{
+		// if assignments or a boolean expression are found
+		if (parse->curToken()
+			&& assignThenBoolExpr(udfString))
+		{
+			return true;
+		}
+	}
+	// else if a boolean expression is found
+	else if (parse->curToken()
+		&& (parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS
+		|| parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
+		|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
+		|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
+		&& boolExpr(udfString))
+	{
+		// *outFile << "<<<<<<639>>>>>>" << parse->curToken()->getTokenName();
+		// *outFile << "<<<<<<639 CUR STRING>>>>>>" << udfString << std::endl;
+		return true;
+	}
+	return false;
+}
+
+/**
+ * Production:
+ * <sortByUDF> --> ( <id> : <type> ) => <exprBlock>
+ *                 [FIRST_PLUS = { ( }]
+ */
+bool RDDToDSGrammar::sortByUDF(std::string &udfString)
+{
+	// if a left parenthesis is found
+	if (parse->curToken()
+		&& parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS)
+	{
+		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		// if an identifier is found
+		if (parse->nextToken()
+			&& parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER)
+		{
+			udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+			// if a colon is found
+			if (parse->nextToken()
+				&& parse->curToken()->getSymType() == Token::SYMTYPE_COLON)
+			{
+				udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+				// if a type is found
+				if (parse->nextToken()
+					&& type(udfString))
+				{
+					// if a right parenthesis is found
+					if (parse->curToken()
+						&& parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_PARENTHESIS)
+					{
+						udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+						// if an arrow is found
+						if (parse->nextToken()
+							&& parse->curToken()->getSymType() == Token::SYMTYPE_ARROW)
+						{
+							udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+							// if an expression block is found
+							if (parse->nextToken()
+								&& (parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_BRACE
+								|| parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS
+								|| parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
+								|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
+								|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
+								&& exprBlock(udfString))
+							{
+								return true;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	*outFile << std::endl << "<<<<<<ERROR>>>>>>" << udfString << std::endl;
+  return false;
+}
+
+/**
+ * Production:
+ * <type> --> Long
+ *            [FIRST_PLUS = { Long }]
+ *          | Int
+ *            [FIRST_PLUS = { Int }]
+ */
+bool RDDToDSGrammar::type(std::string &udfString)
+{
+	// if Long or Int are found
+	if (parse->curToken()
+		&& (!strcmp(parse->curToken()->getTokenName().c_str(), "Long")
+		|| !strcmp(parse->curToken()->getTokenName().c_str(), "Int")))
+	{
+		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		parse->nextToken();
+		return true;
+	}
+	return false;
+}
+
+/**
+ * Production:
+ * <exprBlock> --> { <assignThenExpr> }
+ *                 [FIRST_PLUS = { { }]
+ *               | <expression>
+ *                 [FIRST_PLUS = { <id>, <number>, (, if }]
+ */
+bool RDDToDSGrammar::exprBlock(std::string &udfString)
+{
+	// if a left curly brace is found
+	if (parse->curToken()
+		&& parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_BRACE)
+	{
+		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		// if assignments or an expression are found
+		if (parse->nextToken()
+			&& assignThenExpr(udfString))
+		{
+			// if a right curly brace is found
+			if (parse->curToken()
+				&& parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_BRACE)
+			{
+				udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+				parse->nextToken();
+				return true;
+			}
+		}
+	}
+	// else if an expression is found
+	else if (parse->curToken()
+		&& (parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS
+		|| parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
+		|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
+		|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
+		&& expression(udfString))
+	{
+		return true;
+	}
+	return false;
+}
+
+/**
+ * Production:
+ * <assignThenExpr> --> <assignment> <assignThenExpr>
+ *                      [FIRST_PLUS = { val }]
+ *                    | <expression>
+ *                      [FIRST_PLUS = { <id>, <number>, (, if }]
+ */
+bool RDDToDSGrammar::assignThenExpr(std::string &udfString)
+{
+	// *outFile << "<<<<<<622>>>>>>" << parse->curToken()->getTokenName();
+	// *outFile << "<<<<<<622 CUR STRING>>>>>>" << udfString << std::endl;
+	// if an assignment is found
+	if (parse->curToken()
+		&& !strcmp(parse->curToken()->getTokenName().c_str(), "val")
+		&& assignment(udfString))
+	{
+		// if assignments or an expression are found
+		if (parse->curToken()
+			&& assignThenExpr(udfString))
+		{
+			return true;
+		}
+	}
+	// else if an expression is found
+	else if (parse->curToken()
+		&& (parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS
+		|| parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
+		|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
+		|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
+		&& expression(udfString))
+	{
+		// *outFile << "<<<<<<639>>>>>>" << parse->curToken()->getTokenName();
+		// *outFile << "<<<<<<639 CUR STRING>>>>>>" << udfString << std::endl;
+		return true;
+	}
+	return false;
+}
+
+/**
+ * Production:
+ * <reduceUDF> --> ( <id> : <type> , <id> : <type> ) => <exprBlock>
+ *                 [FIRST_PLUS = { ( }]
+ */
+bool RDDToDSGrammar::reduceUDF(std::string &udfString)
+{
+	// if a left parenthesis is found
+	if (parse->curToken()
+		&& parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS)
+	{
+		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		// if an identifier is found
+		if (parse->nextToken()
+			&& parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER)
+		{
+			udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+			// if a colon is found
+			if (parse->nextToken()
+				&& parse->curToken()->getSymType() == Token::SYMTYPE_COLON)
+			{
+				udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+				// if a type is found
+				if (parse->nextToken()
+					&& type(udfString))
+				{
+					// if a comma is found
+					if (parse->curToken()
+						&& parse->curToken()->getSymType() == Token::SYMTYPE_COMMA)
+					{
+						udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+						// if an identifier is found
+						if (parse->nextToken()
+							&& parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER)
+						{
+							udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+							// if a colon is found
+							if (parse->nextToken()
+								&& parse->curToken()->getSymType() == Token::SYMTYPE_COLON)
+							{
+								udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+								// if a type is found
+								if (parse->nextToken()
+									&& type(udfString))
+								{
+									// if a right parenthesis is found
+									if (parse->curToken()
+										&& parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_PARENTHESIS)
+									{
+										udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+										// if an arrow is found
+										if (parse->nextToken()
+											&& parse->curToken()->getSymType() == Token::SYMTYPE_ARROW)
+										{
+											udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+											// if an expression block is found
+											if (parse->nextToken()
+												&& (parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_BRACE
+												|| parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS
+												|| parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
+												|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
+												|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
+												&& exprBlock(udfString))
+											{
+												return true;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	*outFile << std::endl << "<<<<<<ERROR>>>>>>" << udfString << std::endl;
+  return false;
 }
 
 /**
@@ -1095,7 +1431,7 @@ bool RDDToDSGrammar::boolExpr(std::string &udfString)
 	if (parse->curToken()
 		&& (parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
 		|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
-		|| parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_PARENTHESIS
+		|| parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS
 		|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
 		&& expression(udfString))
 	{

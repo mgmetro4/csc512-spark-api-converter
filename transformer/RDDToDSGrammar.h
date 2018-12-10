@@ -45,23 +45,37 @@ public:
 
 	bool collect();
 
-	bool UDF(std::string &udfString);
+	bool mapUDF(std::string &udfString);
 
-	bool statementBlock(std::string &udfString);
+	bool exprTupleBlock(std::string &udfString);
 
-	bool assignOrStmt(std::string &udfString);
-
-	bool assignments(std::string &udfString);
+	bool assignThenExprTuple(std::string &udfString);
 
 	bool assignment(std::string &udfString);
 
-	bool statement(std::string &udfString);
+	bool exprTuple(std::string &udfString);
 
 	bool parenExprOrTuple(std::string &udfString);
 
 	bool tuple(std::string &udfString);
 
 	bool tuple0(std::string &udfString);
+
+	bool filterUDF(std::string &udfString);
+
+	bool boolExprBlock(std::string &udfString);
+
+	bool assignThenBoolExpr(std::string &udfString);
+
+	bool sortByUDF(std::string &udfString);
+
+	bool type(std::string &udfString);
+
+	bool exprBlock(std::string &udfString);
+
+	bool assignThenExpr(std::string &udfString);
+
+	bool reduceUDF(std::string &udfString);
 
 	bool rightParenExpr(std::string &udfString);
 
