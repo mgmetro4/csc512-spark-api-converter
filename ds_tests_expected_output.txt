@@ -1,0 +1,42 @@
+Exptected Dataset output when converting from RDD to Dataset
+
+
+//Word Counter Test Case
+spark.read.textFile("words.txt")
+    .map(l => l.split(" ").size)
+    .select(reduceAggregator( (a:Int, b:Int) => a+b )).collect() 
+
+
+//Three Chainable Test Case
+spark.range(0,50)  
+  .map(a => a+3)
+  .filter( a => (a%15)==0 )
+  .map(row=>(( (a:Long) => a) (row), row)).orderBy("_1").map(_._2)
+  .select(reduceAggregator( (a:Long, b:Long) => a+b )).collect()
+
+
+//Sort Least to Greatest Test Case
+spark.range(0,10)
+    .map(row =>(( (a:Long) => Math.sin(a)) (row),row)).orderBy("_1").map(_._2)
+    .collect()
+
+
+//Reduce By Key Test Case
+spark.range(1,10000000)
+    .map(i=>(i%11, 1))
+    .groupByKey(_._1)
+    .agg(reduceByKeyAggregator((a:Int, b:Int) => a+b))
+    .collect()
+
+
+//Even Numbers Test Case
+spark.range(0, 51)
+    .filter( i => i%2 == 0 )
+    .collect()
+
+
+//Dataframe Example Test Case
+spark.range(10, 24)
+    .map( i => {val j=i%3; (i, if (j==0) i*10 else i*2) })
+    .map(r => r._1+r._2)
+    .collect()
