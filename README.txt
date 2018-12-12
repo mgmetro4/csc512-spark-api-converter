@@ -22,7 +22,7 @@ All the RDD test cases that can be transformed to Dataset
 are located in /csc512-spark-api-converter/part0/all_dataset_tests
 
 Exptected Dataset Output (proven to work in spark-shell) are located
-in /csc512-spark-api-converter/ds_tests_expected_output.txt
+at /csc512-spark-api-converter/ds_tests_expected_output.txt
 
 This text file contains all the dataset representations found in the /part0
 test cases for easy viewing.
@@ -34,3 +34,8 @@ How To Test Dataframe
 All the RDD test cases that can be transformed to Dataframe
 are located in /csc512-spark-api-converter/part0/all_dataframe_tests
 
+Expected Dataframe Output (proven to work in spark-shell) are located
+at /csc512-spark-api-converter/df_tests_expected_output.txt
+
+This text file contains all the dataframe representations found in the /part0
+test cases for easy viewing. (dataframe example, create tuple, complex tuple)

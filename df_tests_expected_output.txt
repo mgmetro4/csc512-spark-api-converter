@@ -1,0 +1,24 @@
+Expected Dataframe Test Output (tested in spark-shell)
+
+//Complex Tuple
+
+spark.range(0, 10).selectExpr("id as_1")
+    .selectExpr("if(_1%2==0, _1, 0)", "_1 as _2")
+    .collect()
+
+
+
+//Create Tuple
+
+spark.range(1, 11).selectExpr("id as _1")
+    .selectExpr("_1%11 as _1", "1 as _2")
+    .collect()
+
+
+
+//Dataframe Example
+
+spark.range(10,24).selectExpr("id as _1")
+  .selectExpr("_1 as _1", "if(_1%3==0,_1*10,_1*2) as _2")
+  .selectExpr("_1+_2 as _1")
+  .collect()
