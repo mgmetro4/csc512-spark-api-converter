@@ -132,7 +132,7 @@ bool RDDToDFGrammar::mapsOrCollect0()
 		&& parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
 		&& !strcmp(parse->curToken()->getTokenName().c_str(), "map"))
 	{
-		*outFile << parse->curToken()->getTokenName(); // print it to the output file
+		*outFile << "selectExpr";
 		// if a left parenthesis is found
 		if (parse->nextToken()
 			&& parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS)
