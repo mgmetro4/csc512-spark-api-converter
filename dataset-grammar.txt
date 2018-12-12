@@ -1,0 +1,180 @@
+<program>     --> <context> <dataset> <chainordone>
+                  [FIRST_PLUS = { sc }]
+                | EOF
+                  [FIRST_PLUS = { EOF }]
+
+<context>     --> sc
+                  [FIRST_PLUS = { sc }]
+
+<dataset>     --> . <dataset0>
+                  [FIRST_PLUS = { . }]
+<dataset0>    --> <range>
+                  [FIRST_PLUS = { range }]
+                | <textFile>
+                  [FIRST_PLUS = { textFile }]
+
+<range>       --> range ( <number> , <number> )
+                  [FIRST_PLUS = { range }]
+
+<textFile>    --> textFile ( <string> )
+                  [FIRST_PLUS = { textFile }]
+
+
+<chainordone> --> . <chainordone0>
+                  [FIRST_PLUS = { . }]
+
+<chainordone0> --> <chainable>
+                   [FIRST_PLUS = { map, filter, sortBy }]
+                 | <done>
+                   [FIRST_PLUS = { reduce, reduceByKey, collect }]
+
+<chainable>   --> <map> <chainordone>
+                  [FIRST_PLUS = { map }]
+                | <filter> <chainordone>
+                  [FIRST_PLUS = { filter }]
+                | <sort> <chainordone>
+                  [FIRST_PLUS = { sortBy }]
+
+<map>         --> map ( <mapUDF> )
+                  [FIRST_PLUS = { map }]
+
+<filter>      --> filter ( <filterUDF> )
+                  [FIRST_PLUS = { filter }]
+
+<sort>        --> sortBy ( <sortByUDF> )
+                  [FIRST_PLUS = { sortBy }]
+
+<done>        --> <reduce>
+                  [FIRST_PLUS = { reduce, reduceByKey }]
+                | <collect>
+                  [FIRST_PLUS = { collect }]
+
+
+<reduce>      --> reduce ( <reduceUDF> )
+                  [FIRST_PLUS = { reduce }]
+                | reduceByKey ( <reduceUDF> )
+                  [FIRST_PLUS = { reduceByKey }]
+
+<collect>     --> collect ( )
+                  [FIRST_PLUS = { collect }]
+
+<mapUDF>      --> <id> => <exprTupleBlock>
+                  [FIRST_PLUS = { <id> }]
+
+
+
+<exprTupleBlock> --> { <assignThenExprTuple> }
+                     [FIRST_PLUS = { { }]
+                   | <exprTuple>
+                     [FIRST_PLUS = { <id>, <number>, (, if }]
+
+<assignThenExprTuple> --> <assignment> <assignThenExprTuple>
+                          [FIRST_PLUS = { val }]
+                        | <exprTuple>
+                          [FIRST_PLUS = { <id>, <number>, (, if }]
+
+<assignment> --> val <id> = <expression> ;
+                 [FIRST_PLUS = { val }]
+
+<exprTuple> --> <noParenExpr>
+                [FIRST_PLUS = { <id>, <number>, if }]
+              | ( <expression> <parenExprOrTuple>
+                [FIRST_PLUS = { ( }]
+
+<parenExprOrTuple> --> <rightParenExpr>
+                       [FIRST_PLUS = { ) }]
+                     | <tuple>
+                       [FIRST_PLUS = { , }]
+
+<tuple> --> , <expression> <tuple0> )
+            [FIRST_PLUS = { , }]
+
+<tuple0> --> , <expression> <tuple0>
+             [FIRST_PLUS = { , }]
+           | EPSILON
+             [FIRST_PLUS = { ) }]
+
+<filterUDF>   --> <id> => <boolExprBlock>
+                  [FIRST_PLUS = { <id> }]
+
+<boolExprBlock> --> { <assignThenBoolExpr> }
+                     [FIRST_PLUS = { { }]
+                   | <boolExpr>
+                     [FIRST_PLUS = { <id>, <number>, (, if }]
+
+<assignThenBoolExpr> --> <assignment> <assignThenBoolExpr>
+                         [FIRST_PLUS = { val }]
+                       | <boolExpr>
+                         [FIRST_PLUS = { <id>, <number>, (, if }]
+
+<sortByUDF>   --> ( <id> : <type> ) => <exprBlock>
+                  [FIRST_PLUS = { ( }]
+
+<type> --> Long
+           [FIRST_PLUS = { Long }]
+         | Int
+           [FIRST_PLUS = { Int }]
+
+<exprBlock> --> { <assignThenExpr> }
+                [FIRST_PLUS = { { }]
+              | <expression>
+                [FIRST_PLUS = { <id>, <number>, (, if }]
+
+<assignThenExpr> --> <assignment> <assignThenExpr>
+                     [FIRST_PLUS = { val }]
+                   | <expression>
+                     [FIRST_PLUS = { <id>, <number>, (, if }]
+
+<reduceUDF> --> ( <id> : <type> , <id> : <type> ) => <exprBlock>
+                [FIRST_PLUS = { ( }]
+
+<rightParenExpr> --> ) <opExpr>
+                     [FIRST_PLUS = { ) }]
+
+<noParenExpr> --> <id> <field> <opExpr>
+                  [FIRST_PLUS = { <id> }]
+                | <number> <opExpr>
+                  [FIRST_PLUS = { <number> }]
+                | if ( <boolExpr> ) <expression> else <expression>
+                  [FIRST_PLUS = { if }]
+
+<field> --> . <id>
+            [FIRST_PLUS = { . }]
+          | EPSILON
+            [FIRST_PLUS = { +, -, *, %, ), }, ;, ,, else, ==, <, >, !=, <=, >= }]
+
+<expression> --> <noParenExpr>
+                 [FIRST_PLUS = { <id>, <number>, if }]
+               | ( <expression> <rightParenExpr>
+                 [FIRST_PLUS = { ( }]
+
+
+<opExpr> --> <op> <expression> <opExpr>
+                  [FIRST_PLUS = { +, -, *, % }]
+             | EPSILON
+                  [FIRST_PLUS = { ), }, ;, ,, else, ==, <, >, !=, <=, >= }]
+
+<boolExpr> --> <expression> <comp> <expression>
+               [FIRST_PLUS = { <id>, <number>, (, if }]
+
+<op> --> +
+         [FIRST_PLUS = { + }]
+       | -
+         [FIRST_PLUS = { - }]
+       | *
+         [FIRST_PLUS = { * }]
+       | %
+         [FIRST_PLUS = { % }]
+
+<comp> --> ==
+           [FIRST_PLUS = { == }]
+         | <
+           [FIRST_PLUS = { < }]
+         | >
+           [FIRST_PLUS = { > }]
+         | !=
+           [FIRST_PLUS = { != }]
+         | >=
+           [FIRST_PLUS = { >= }]
+         | <=
+           [FIRST_PLUS = { <= }]

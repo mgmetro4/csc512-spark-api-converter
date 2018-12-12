@@ -1,0 +1,13 @@
+<letter> --> a | b | ... | y | z | A | B | ... | Z | _
+
+<digit> --> 0 | 1 | ... | 9
+
+<number> --> <digit>+
+
+<id> --> <letter> (<letter> | <digit>)*
+
+<string> --> any string between (and including) the closest pair of double quotation marks
+
+<char> --> a character between (and including) a pair of single quotation marks
+
+<symbol> --> any non-space character that is not a part of other tokens
