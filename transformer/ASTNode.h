@@ -19,10 +19,9 @@ public:
 	ASTNode *left;
 	ASTNode *right;
 
-	ASTNode(std::string newValue
-		,int newType)
-		: value(newValue)
-		, type(newType)
+	ASTNode(std::string newValue, int newType):
+	value(newValue),
+	type(newType)
 	{
 		left = NULL;
 		right = NULL;

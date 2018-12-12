@@ -6,9 +6,15 @@
 #ifndef _RDD_TO_DF_GRAMMAR_H
 #define _RDD_TO_DF_GRAMMAR_H
 #include <fstream>
+#include <vector>
 #include "Parser.h"
 #include "ASTNode.h"
 #include "Grammar.h"
+
+struct Variable {
+	std::string name;
+	std::string value;
+};
 
 class RDDToDFGrammar: public Grammar
 {
@@ -23,39 +29,39 @@ public:
 
 	bool mapsOrCollect0();
 
-	bool UDF(std::string &udfString);
+	bool UDF(std::vector<Variable*> &vars);
 
-	bool statementBlock(std::string &udfString);
+	bool statementBlock(std::vector<Variable*> &vars);
 
-	bool assignOrStmt(std::string &udfString);
+	bool assignOrStmt(std::vector<Variable*> &vars);
 
-	bool assignments(std::string &udfString);
+	bool assignments(std::vector<Variable*> &vars);
 
-	bool assignment(std::string &udfString);
+	bool assignment(std::vector<Variable*> &vars);
 
-	bool statement(std::string &udfString);
+	bool statement(std::vector<Variable*> &vars);
 
-	bool parenExprOrTuple(std::string &udfString);
+	bool parenExprOrTuple(std::string &prevExprStr, std::vector<Variable*> &vars);
 
-	bool tuple(std::string &udfString);
+	bool tuple(std::string &prevExprStr, std::vector<Variable*> &vars);
 
-	bool tuple0(std::string &udfString);
+	bool tuple0(std::vector<Variable*> &vars, int sqlExprNum);
 
-	bool rightParenExpr(std::string &udfString);
+	bool rightParenExpr(std::string &exprStr, std::vector<Variable*> &vars);
 
-	bool noParenExpr(std::string &udfString);
+	bool noParenExpr(std::string &exprStr, std::vector<Variable*> &vars);
 
-	bool field(std::string &udfString);
+	bool field(std::string &fieldStr);
 
-	bool expression(std::string &udfString);
+	bool expression(std::string &exprStr, std::vector<Variable*> &vars);
 
-	bool opExpr(std::string &udfString);
+	bool opExpr(std::string &exprStr, std::vector<Variable*> &vars);
 
-	bool boolExpr(std::string &udfString);
+	bool boolExpr(std::string &exprStr, std::vector<Variable*> &vars);
 
-	bool op(std::string &udfString);
+	bool op(std::string &exprStr);
 
-	bool comp(std::string &udfString);
+	bool comp(std::string &exprStr);
 
 	void evaluateASTTree(ASTNode *root);
 

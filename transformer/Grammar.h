@@ -7,7 +7,6 @@
 #define _GRAMMAR_H
 #include <fstream>
 #include "Parser.h"
-#include "ASTNode.h"
 
 class Parser;
 

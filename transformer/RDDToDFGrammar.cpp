@@ -132,18 +132,17 @@ bool RDDToDFGrammar::mapsOrCollect0()
 		&& parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
 		&& !strcmp(parse->curToken()->getTokenName().c_str(), "map"))
 	{
-		*outFile << "selectExpr";
+		*outFile << "selectExpr"; // print the transformation to the output file
 		// if a left parenthesis is found
 		if (parse->nextToken()
 			&& parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS)
 		{
 			*outFile << parse->curToken()->getTokenName(); // print it to the output file
-			std::string userFunction;
+			std::vector<Variable*> vars;
 			// if a UDF is found
 			if (parse->nextToken()
-				&& UDF(userFunction))
+				&& UDF(vars))
 			{
-				*outFile << userFunction; // print it to the output file
 				// if a right parenthesis is found
 				if (parse->curToken()
 					&& parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_PARENTHESIS)
@@ -187,18 +186,22 @@ bool RDDToDFGrammar::mapsOrCollect0()
  * <UDF> --> <identifier> => <statementBlock>
  *           [FIRST_PLUS = { <identifier> }]
  */
-bool RDDToDFGrammar::UDF(std::string &udfString)
+bool RDDToDFGrammar::UDF(std::vector<Variable*> &vars)
 {
 	// if an identifier is found
 	if (parse->curToken()
 		&& parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER)
 	{
-		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		// add it as the first variable with a value of "_1"
+		Variable *var1 = new Variable;
+		var1->name = parse->curToken()->getTokenName();
+		var1->value = "_1";
+		vars.push_back(var1);
+
 		// if an arrow is found
 		if (parse->nextToken()
 			&& parse->curToken()->getSymType() == Token::SYMTYPE_ARROW)
 		{
-			udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
 			// if a statement block is found
 			if (parse->nextToken()
 				&& (parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_BRACE
@@ -206,13 +209,13 @@ bool RDDToDFGrammar::UDF(std::string &udfString)
 				|| parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
 				|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
 				|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
-				&& statementBlock(udfString))
+				&& statementBlock(vars))
 			{
 				return true;
 			}
 		}
 	}
-	*outFile << std::endl << "<<<<<<ERROR>>>>>>" << udfString << std::endl;
+	*outFile << std::endl << "ERROR in UDF";
   return false;
 }
 
@@ -223,22 +226,20 @@ bool RDDToDFGrammar::UDF(std::string &udfString)
  *                    | <statement>
  *                      [FIRST_PLUS = { <identifier>, <number>, (, if }]
  */
-bool RDDToDFGrammar::statementBlock(std::string &udfString)
+bool RDDToDFGrammar::statementBlock(std::vector<Variable*> &vars)
 {
 	// if a left curly brace is found
 	if (parse->curToken()
 		&& parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_BRACE)
 	{
-		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
 		// if assignments or statements are found
 		if (parse->nextToken()
-			&& assignOrStmt(udfString))
+			&& assignOrStmt(vars))
 		{
 			// if a right curly brace is found
 			if (parse->curToken()
 				&& parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_BRACE)
 			{
-				udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
 				parse->nextToken();
 				return true;
 			}
@@ -250,7 +251,7 @@ bool RDDToDFGrammar::statementBlock(std::string &udfString)
 		|| parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
 		|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
 		|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
-		&& statement(udfString))
+		&& statement(vars))
 	{
 		return true;
 	}
@@ -264,14 +265,14 @@ bool RDDToDFGrammar::statementBlock(std::string &udfString)
  *                  | <statement>
  *                    [FIRST_PLUS = { <identifier>, <number>, (, if }]
  */
-bool RDDToDFGrammar::assignOrStmt(std::string &udfString)
+bool RDDToDFGrammar::assignOrStmt(std::vector<Variable*> &vars)
 {
 	// *outFile << "<<<<<<622>>>>>>" << parse->curToken()->getTokenName();
 	// *outFile << "<<<<<<622 CUR STRING>>>>>>" << udfString << std::endl;
 	// if assignments are found
 	if (parse->curToken()
 		&& !strcmp(parse->curToken()->getTokenName().c_str(), "val")
-		&& assignments(udfString))
+		&& assignments(vars))
 	{
 		return true;
 	}
@@ -281,7 +282,7 @@ bool RDDToDFGrammar::assignOrStmt(std::string &udfString)
 		|| parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
 		|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
 		|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
-		&& statement(udfString))
+		&& statement(vars))
 	{
 		// *outFile << "<<<<<<639>>>>>>" << parse->curToken()->getTokenName();
 		// *outFile << "<<<<<<639 CUR STRING>>>>>>" << udfString << std::endl;
@@ -295,16 +296,16 @@ bool RDDToDFGrammar::assignOrStmt(std::string &udfString)
  * <assignments> --> <assignment> <assignOrStmt>
  *                   [FIRST_PLUS = { val }]
  */
-bool RDDToDFGrammar::assignments(std::string &udfString)
+bool RDDToDFGrammar::assignments(std::vector<Variable*> &vars)
 {
 	// if an assignment is found
 	if (parse->curToken()
 		&& !strcmp(parse->curToken()->getTokenName().c_str(), "val")
-		&& assignment(udfString))
+		&& assignment(vars))
 	{
 		// if assignments or statements are found
 		if (parse->curToken()
-			&& assignOrStmt(udfString))
+			&& assignOrStmt(vars))
 		{
 			return true;
 		}
@@ -317,33 +318,37 @@ bool RDDToDFGrammar::assignments(std::string &udfString)
  * <assignment> --> val <identifier> = <expression> ;
  *                  [FIRST_PLUS = { val }]
  */
-bool RDDToDFGrammar::assignment(std::string &udfString)
+bool RDDToDFGrammar::assignment(std::vector<Variable*> &vars)
 {
 	// if the val keyword is found
 	if (parse->curToken()
 		&& !strcmp(parse->curToken()->getTokenName().c_str(), "val"))
 	{
-		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
 		// if an identifier is found
 		if (parse->nextToken()
 			&& parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER)
 		{
-			udfString.append(" "); // add a space to the string that's being constructed
-			udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+			// create another variable
+			Variable *var = new Variable;
+			var->name = parse->curToken()->getTokenName();
+
 			// if an equal sign is found
 			if (parse->nextToken()
 				&& parse->curToken()->getSymType() == Token::SYMTYPE_EQUAL)
 			{
-				udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+				std::string exprStr;
 				// if an expression is found
 				if (parse->nextToken()
-					&& expression(udfString))
+					&& expression(exprStr, vars))
 				{
+					// store the expression string as the value
+					var->value = exprStr;
+					vars.push_back(var);
+
 					// if a semicolon is found
 					if (parse->curToken()
 						&& parse->curToken()->getSymType() == Token::SYMTYPE_SEMICOLON)
 					{
-						udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
 						parse->nextToken();
 						//*outFile << "<<<<<<LINE 697>>>>>>" << parse->curToken()->getTokenName();
 						return true;
@@ -362,28 +367,30 @@ bool RDDToDFGrammar::assignment(std::string &udfString)
  *               | ( <expression> <parenExprOrTuple>
  *                 [FIRST_PLUS = { ( }]
  */
-bool RDDToDFGrammar::statement(std::string &udfString)
+bool RDDToDFGrammar::statement(std::vector<Variable*> &vars)
 {
+	std::string noParenExprStr;
 	// if a no paren expression is found
 	if (parse->curToken()
 		&& (parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
 		|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
 		|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
-		&& noParenExpr(udfString))
+		&& noParenExpr(noParenExprStr, vars))
 	{
+		*outFile << "\"" << noParenExprStr << " as " << "_1\""; // print out the expression as the sole SQL expression
 		return true;
 	}
 	// else if a left parenthesis is found
 	else if (parse->curToken()
 		&& parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS)
 	{
-		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		std::string exprStr;
 		// if an expression is found
 		if (parse->nextToken()
-			&& expression(udfString))
+			&& expression(exprStr, vars))
 		{
 			// if a right paren expression or tuple is found
-			if (parenExprOrTuple(udfString))
+			if (parenExprOrTuple(exprStr, vars))
 			{
 				return true;
 			}
@@ -401,19 +408,20 @@ bool RDDToDFGrammar::statement(std::string &udfString)
  *                      | <tuple>
  *                        [FIRST_PLUS = { , }]
  */
-bool RDDToDFGrammar::parenExprOrTuple(std::string &udfString)
+bool RDDToDFGrammar::parenExprOrTuple(std::string &prevExprStr, std::vector<Variable*> &vars)
 {
 	// if a right paren expression is found
 	if (parse->curToken()
 		&& (parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_PARENTHESIS)
-		&& rightParenExpr(udfString))
+		&& rightParenExpr(prevExprStr, vars))
 	{
+		*outFile << "\"(" << prevExprStr << " as " << "_1\""; // print out the expression as the sole SQL expression
 		return true;
 	}
 	// else if a tuple is found
 	else if (parse->curToken()
 		&& (parse->curToken()->getSymType() == Token::SYMTYPE_COMMA)
-		&& tuple(udfString))
+		&& tuple(prevExprStr, vars))
 	{
 		return true;
 	}
@@ -425,26 +433,28 @@ bool RDDToDFGrammar::parenExprOrTuple(std::string &udfString)
  * <tuple> --> , <expression> <tuple0> )
  *             [FIRST_PLUS = { , }]
  */
-bool RDDToDFGrammar::tuple(std::string &udfString)
+bool RDDToDFGrammar::tuple(std::string &prevExprStr, std::vector<Variable*> &vars)
 {
 	// if a comma is found
 	if (parse->curToken()
 		&& (parse->curToken()->getSymType() == Token::SYMTYPE_COMMA))
 	{
-		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		*outFile << "\"" << prevExprStr << " as " << "_1\""; // print out the previous expression as the first SQL expression
+		*outFile << ", "; // print out a comma to separate next SQL expression
+		std::string exprStr;
 		// if an expression is found
 		if (parse->nextToken()
-			&& expression(udfString))
+			&& expression(exprStr, vars))
 		{
+			*outFile << "\"" << exprStr << " as " << "_2\""; // print out this expression as the second SQL expression
 			// if a tuple0 is found
 			if (parse->curToken()
-				&& tuple0(udfString))
+				&& tuple0(vars, 3))
 			{
 				// if a right parenthesis is found
 				if (parse->curToken()
 					&& (parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_PARENTHESIS))
 				{
-					udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
 					parse->nextToken();
 					return true;
 				}
@@ -461,19 +471,21 @@ bool RDDToDFGrammar::tuple(std::string &udfString)
  *            | EPSILON
  *              [FIRST_PLUS = { ) }]
  */
-bool RDDToDFGrammar::tuple0(std::string &udfString)
+bool RDDToDFGrammar::tuple0(std::vector<Variable*> &vars, int sqlExprNum)
 {
 	// if a comma is found
 	if (parse->curToken()
 		&& (parse->curToken()->getSymType() == Token::SYMTYPE_COMMA))
 	{
-		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		*outFile << ", "; // print out a comma to separate next SQL expression
+		std::string exprStr;
 		// if an expression is found
 		if (parse->nextToken()
-			&& expression(udfString))
+			&& expression(exprStr, vars))
 		{
+			*outFile << "\"" << exprStr << " as _" << sqlExprNum << "\""; // print out this expression as the <sqlExprNum>th SQL expression
 			// if a tuple0 is found
-			if (tuple0(udfString))
+			if (tuple0(vars, sqlExprNum + 1))
 			{
 				return true;
 			}
@@ -493,16 +505,16 @@ bool RDDToDFGrammar::tuple0(std::string &udfString)
  * <rightParenExpr> --> ) <opExpr>
  *                      [FIRST_PLUS = { ) }]
  */
-bool RDDToDFGrammar::rightParenExpr(std::string &udfString)
+bool RDDToDFGrammar::rightParenExpr(std::string &exprStr, std::vector<Variable*> &vars)
 {
 	// if a right parenthesis is found
 	if (parse->curToken()
 		&& (parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_PARENTHESIS))
 	{
-		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		exprStr.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
 		// if an op expression is found
 		if (parse->nextToken()
-			&& opExpr(udfString))
+			&& opExpr(exprStr, vars))
 		{
 			return true;
 		}
@@ -519,7 +531,7 @@ bool RDDToDFGrammar::rightParenExpr(std::string &udfString)
  *                 | if ( <boolExpr> ) <expression> else <expression>
  *                   [FIRST_PLUS = { if }]
  */
-bool RDDToDFGrammar::noParenExpr(std::string &udfString)
+bool RDDToDFGrammar::noParenExpr(std::string &exprStr, std::vector<Variable*> &vars)
 {
 	// *outFile << "<<<<<<874>>>>>>" << parse->curToken()->getTokenName();
 	// *outFile << "<<<<<<874 CUR STRING>>>>>>" << udfString << std::endl;
@@ -527,15 +539,75 @@ bool RDDToDFGrammar::noParenExpr(std::string &udfString)
 	if (parse->curToken()
 		&& (parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER))
 	{
-		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
-		// if a field is found
-		if (parse->nextToken()
-			&& field(udfString))
+		std::string idStr(parse->curToken()->getTokenName());
+		// search through the vars (excluding the first var (the param of the UDF)) to see if any match this id
+		bool foundMatch = false;
+		for (unsigned i = 1; i < vars.size(); i++)
 		{
+			Variable *curVar = vars.at(i);
+			// check if the current variable's name matches the id
+			if (!strcmp(idStr.c_str(), curVar->name.c_str()))
+			{
+				exprStr.append("(");
+				exprStr.append(curVar->value); // add the value of the variable to the expression string
+				exprStr.append(")");
+				foundMatch = true;
+				break;
+			}
+		}
+
+		std::string fieldStr;
+		// if a valid field configuration is found
+		if (parse->nextToken()
+			&& field(fieldStr))
+		{
+			// if a field was found
+			if (!fieldStr.empty())
+			{
+				// if a match was previously found with one of the vars
+				if (foundMatch) {
+					return false; // there shouldn't be any field calls after a declared var
+				}
+				// if the idStr matches the first variable (the param of the UDF)
+				Variable *udfParam = vars.at(0);
+				if (!strcmp(idStr.c_str(), udfParam->name.c_str()))
+				{
+					// add the actual field without a period
+					exprStr.append(fieldStr);
+				}
+				// else just add the id and the field with the period
+				else
+				{
+					exprStr.append(idStr); // add the actual id to the string that's being constructed
+					exprStr.append(".");
+					exprStr.append(fieldStr);
+				}
+			}
+			// else a field wasn't found
+			else
+			{
+				// if there wasn't a match found when searching through the 1-N vars
+				if (!foundMatch) {
+					// if the idStr matches the first variable (the param of the UDF)
+					Variable *udfParam = vars.at(0);
+					if (!strcmp(idStr.c_str(), udfParam->name.c_str()))
+					{
+						// add the value of the udf param (_1)
+						exprStr.append(udfParam->value);
+					}
+					// else just add the id
+					else
+					{
+						exprStr.append(idStr); // add the actual id to the string that's being constructed
+					}
+				}
+			}
+
+
 			// *outFile << "<<<<<<889>>>>>>" << parse->curToken()->getTokenName();
 			// *outFile << "<<<<<<889 CUR STRING>>>>>>" << udfString << std::endl;
 			// if an op expression is found
-			if (opExpr(udfString))
+			if (opExpr(exprStr, vars))
 			{
 				return true;
 			}
@@ -545,10 +617,10 @@ bool RDDToDFGrammar::noParenExpr(std::string &udfString)
 	else if (parse->curToken()
 		&& (parse->curToken()->getID() == Token::IDTYPE_NUMBER))
 	{
-		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		exprStr.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
 		// if an op expression is found
 		if (parse->nextToken()
-			&& opExpr(udfString))
+			&& opExpr(exprStr, vars))
 		{
 			return true;
 		}
@@ -557,38 +629,38 @@ bool RDDToDFGrammar::noParenExpr(std::string &udfString)
 	else if (parse->curToken()
 		&& (!strcmp(parse->curToken()->getTokenName().c_str(), "if")))
 	{
-		udfString.append(" "); // add a space to the string that's being constructed
-		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
-		udfString.append(" "); // add a space to the string that's being constructed
+		exprStr.append(" "); // add a space to the string that's being constructed
+		exprStr.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		exprStr.append(" "); // add a space to the string that's being constructed
 		// if a left parenthesis is found
 		if (parse->nextToken()
 			&& (parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS))
 		{
-			udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+			exprStr.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
 			// if a bool expression is found
 			if (parse->nextToken()
-				&& boolExpr(udfString))
+				&& boolExpr(exprStr, vars))
 			{
 				// if a right parenthesis is found
 				if (parse->curToken()
 					&& (parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_PARENTHESIS))
 				{
-					udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+					//exprStr.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+					exprStr.append(","); // add a comma to the expression string
 					// if an expression is found
 					if (parse->nextToken()
-						&& expression(udfString))
+						&& expression(exprStr, vars))
 					{
 						// if the else keyword is found
 						if (parse->curToken()
 							&& (!strcmp(parse->curToken()->getTokenName().c_str(), "else")))
 						{
-							udfString.append(" "); // add a space to the string that's being constructed
-							udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
-							udfString.append(" "); // add a space to the string that's being constructed
+							exprStr.append(","); // add a comma to the expression string
 							// if an expression is found
 							if (parse->nextToken()
-								&& expression(udfString))
+								&& expression(exprStr, vars))
 							{
+								exprStr.append(")"); // add a right parenthesis to the expression string
 								return true;
 							}
 						}
@@ -607,18 +679,17 @@ bool RDDToDFGrammar::noParenExpr(std::string &udfString)
  *           | EPSILON
  *             [FIRST_PLUS = { +, -, *, %, ), }, ;, ,, else, ==, <, >, !=, <=, >= }]
  */
-bool RDDToDFGrammar::field(std::string &udfString)
+bool RDDToDFGrammar::field(std::string &fieldStr)
 {
 	// if a period is found
 	if (parse->curToken()
 		&& (parse->curToken()->getSymType() == Token::SYMTYPE_PERIOD))
 	{
-		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
 		// if an identifier is found
 		if (parse->nextToken()
 			&& (parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER))
 		{
-			udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+			fieldStr.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
 			parse->nextToken();
 			return true;
 		}
@@ -653,14 +724,14 @@ bool RDDToDFGrammar::field(std::string &udfString)
  *                | ( <expression> <rightParenExpr>
  *                  [FIRST_PLUS = { ( }]
  */
-bool RDDToDFGrammar::expression(std::string &udfString)
+bool RDDToDFGrammar::expression(std::string &exprStr, std::vector<Variable*> &vars)
 {
 	// if a no paren expression is found
 	if (parse->curToken()
 		&& (parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER
 		|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
 		|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
-		&& noParenExpr(udfString))
+		&& noParenExpr(exprStr, vars))
 	{
 		return true;
 	}
@@ -668,13 +739,13 @@ bool RDDToDFGrammar::expression(std::string &udfString)
 	else if (parse->curToken()
 		&& (parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS))
 	{
-		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		exprStr.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
 		// if an expression is found
 		if (parse->nextToken()
-			&& expression(udfString))
+			&& expression(exprStr, vars))
 		{
 			// if a right paren expression is found
-			if (rightParenExpr(udfString))
+			if (rightParenExpr(exprStr, vars))
 			{
 				return true;
 			}
@@ -690,7 +761,7 @@ bool RDDToDFGrammar::expression(std::string &udfString)
  *            | EPSILON
  *              [FIRST_PLUS = { ), }, ;, ,, else, ==, <, >, !=, <=, >= }]
  */
-bool RDDToDFGrammar::opExpr(std::string &udfString)
+bool RDDToDFGrammar::opExpr(std::string &exprStr, std::vector<Variable*> &vars)
 {
 	// if an op is found
 	if (parse->curToken()
@@ -698,13 +769,13 @@ bool RDDToDFGrammar::opExpr(std::string &udfString)
 		|| parse->curToken()->getSymType() == Token::SYMTYPE_MINUS
 		|| parse->curToken()->getSymType() == Token::SYMTYPE_STAR
 		|| parse->curToken()->getSymType() == Token::SYMTYPE_PERCENT)
-		&& op(udfString))
+		&& op(exprStr))
 	{
 		// if an expression is found
-		if (expression(udfString))
+		if (expression(exprStr, vars))
 		{
 			// if an op expression is found
-			if (opExpr(udfString))
+			if (opExpr(exprStr, vars))
 			{
 				return true;
 			}
@@ -736,7 +807,7 @@ bool RDDToDFGrammar::opExpr(std::string &udfString)
  * <boolExpr> --> <expression> <comp> <expression>
  *                [FIRST_PLUS = { <identifier>, <number>, (, if }]
  */
-bool RDDToDFGrammar::boolExpr(std::string &udfString)
+bool RDDToDFGrammar::boolExpr(std::string &exprStr, std::vector<Variable*> &vars)
 {
 	// if an expression is found
 	if (parse->curToken()
@@ -744,13 +815,13 @@ bool RDDToDFGrammar::boolExpr(std::string &udfString)
 		|| parse->curToken()->getID() == Token::IDTYPE_NUMBER
 		|| parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_PARENTHESIS
 		|| !strcmp(parse->curToken()->getTokenName().c_str(), "if"))
-		&& expression(udfString))
+		&& expression(exprStr, vars))
 	{
 		// if a comparator is found
-		if (comp(udfString))
+		if (comp(exprStr))
 		{
 			// if an expression is found
-			if (expression(udfString))
+			if (expression(exprStr, vars))
 			{
 				return true;
 			}
@@ -770,7 +841,7 @@ bool RDDToDFGrammar::boolExpr(std::string &udfString)
  *        | %
  *          [FIRST_PLUS = { % }]
  */
-bool RDDToDFGrammar::op(std::string &udfString)
+bool RDDToDFGrammar::op(std::string &exprStr)
 {
 	// if an op is found
 	if (parse->curToken()
@@ -779,7 +850,7 @@ bool RDDToDFGrammar::op(std::string &udfString)
 		|| parse->curToken()->getSymType() == Token::SYMTYPE_STAR
 		|| parse->curToken()->getSymType() == Token::SYMTYPE_PERCENT))
 	{
-		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		exprStr.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
 		parse->nextToken();
 		return true;
 	}
@@ -801,7 +872,7 @@ bool RDDToDFGrammar::op(std::string &udfString)
  *          | <=
  *            [FIRST_PLUS = { <= }]
  */
-bool RDDToDFGrammar::comp(std::string &udfString)
+bool RDDToDFGrammar::comp(std::string &exprStr)
 {
 	if (parse->curToken()
 		&& (parse->curToken()->getSymType() == Token::SYMTYPE_DOUBLE_EQUAL
@@ -811,7 +882,7 @@ bool RDDToDFGrammar::comp(std::string &udfString)
 		|| parse->curToken()->getSymType() == Token::SYMTYPE_LT_EQUAL
 		|| parse->curToken()->getSymType() == Token::SYMTYPE_GT_EQUAL))
 	{
-		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+		exprStr.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
 		parse->nextToken();
 		return true;
 	}
