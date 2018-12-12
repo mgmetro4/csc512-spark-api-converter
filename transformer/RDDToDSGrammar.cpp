@@ -203,18 +203,27 @@ bool RDDToDSGrammar::textFile()
 bool RDDToDSGrammar::chainordone()
 {
 	// if a period is found
-	if (parse->curToken()
-		&& parse->curToken()->getSymType() == Token::SYMTYPE_PERIOD)
-	{
-		*outFile << parse->curToken()->getTokenName(); // print it to the output file
-		parse->nextToken();
-		// if chainordone0 is found
-		if (chainordone0())
-		{
-			return true;
-		}
-	}
-	return false;
+    if (parse->curToken()
+        && parse->curToken()->getSymType() == Token::SYMTYPE_PERIOD)
+    {
+        std::cout << "chainordone\n";
+        *outFile << parse->curToken()->getTokenName(); // print it to the output file
+        parse->nextToken();
+        // if chainordone0 is found
+        if (chainordone0())
+        {   
+            return true;
+        }
+    }
+    else if(parse->curToken()
+        && !(parse->curToken()->getSymType() == Token::SYMTYPE_PERIOD))
+    {
+        if(chainordone0()){
+            return true;
+        }
+    }
+    std::cout << "false chainordone\n";
+    return false;
 }
 
 /**
@@ -227,30 +236,31 @@ bool RDDToDSGrammar::chainordone()
 bool RDDToDSGrammar::chainordone0()
 {
 	// if the map, filter, or sortBy keywords are found
-	if (parse->curToken()
-		&& parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
-		&& (!strcmp(parse->curToken()->getTokenName().c_str(), "map")
-		|| !strcmp(parse->curToken()->getTokenName().c_str(), "filter")
-		|| !strcmp(parse->curToken()->getTokenName().c_str(), "sortBy")))
-	{
-		if (chainable())
-		{
-			return true;
-		}
-	}
-	// else if the reduce, reduceByKey, or collect keywords are found
-	else if (parse->curToken()
-		&& parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
-		&& (!strcmp(parse->curToken()->getTokenName().c_str(), "reduce")
-		|| !strcmp(parse->curToken()->getTokenName().c_str(), "reduceByKey")
-		|| !strcmp(parse->curToken()->getTokenName().c_str(), "collect")))
-	{
-		if (done())
-		{
-			return true;
-		}
-	}
-	return false;
+    if (parse->curToken()
+        && parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
+        && (!strcmp(parse->curToken()->getTokenName().c_str(), "map")
+        || !strcmp(parse->curToken()->getTokenName().c_str(), "filter")
+        || !strcmp(parse->curToken()->getTokenName().c_str(), "sortBy"))
+        || !strcmp(parse->curToken()->getTokenName().c_str(), "reduceByKey")
+        )
+    {
+        if (chainable())
+        {
+            return true;
+        }
+    }
+    // else if the reduce, reduceByKey, or collect keywords are found
+    else if (parse->curToken()
+        && parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
+        && (!strcmp(parse->curToken()->getTokenName().c_str(), "reduce")
+        || !strcmp(parse->curToken()->getTokenName().c_str(), "collect")))
+    {
+        if (done())
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -263,41 +273,51 @@ bool RDDToDSGrammar::chainordone0()
  *                 [FIRST_PLUS = { sortBy }]
  */
 bool RDDToDSGrammar::chainable()
-{
-	// if the map keyword is found
-	if (parse->curToken()
-		&& parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
-		&& !strcmp(parse->curToken()->getTokenName().c_str(), "map"))
-	{
-		if (map()
-			&& chainordone())
-		{
-			return true;
-		}
-	}
-	// else if the filter keyword is found
-	else if (parse->curToken()
-		&& parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
-		&& !strcmp(parse->curToken()->getTokenName().c_str(), "filter"))
-	{
-		if (filter()
-			&& chainordone())
-		{
-			return true;
-		}
-	}
-	// else if the sortBy keyword is found
-	else if (parse->curToken()
-		&& parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
-		&& !strcmp(parse->curToken()->getTokenName().c_str(), "sortBy"))
-	{
-		if (sort()
-			&& chainordone())
-		{
-			return true;
-		}
-	}
-	return false;
+{// if the map keyword is found
+    if (parse->curToken()
+        && parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
+        && !strcmp(parse->curToken()->getTokenName().c_str(), "map"))
+    {
+        if (map()
+            && chainordone())
+        {
+            return true;
+        }
+    }
+    // else if the filter keyword is found
+    else if (parse->curToken()
+        && parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
+        && !strcmp(parse->curToken()->getTokenName().c_str(), "filter"))
+    {
+        if (filter()
+            && chainordone())
+        {
+            return true;
+        }
+    }
+    // else if the sortBy keyword is found
+    else if (parse->curToken()
+        && parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
+        && !strcmp(parse->curToken()->getTokenName().c_str(), "sortBy"))
+    {
+        if (sort()
+            && chainordone())
+        {
+            return true;
+        }
+    }
+    else if (parse->curToken()
+        && parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
+        && !strcmp(parse->curToken()->getTokenName().c_str(), "reduceByKey"))
+    {
+        if (reduce()
+            && chainordone())
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /**
@@ -308,35 +328,45 @@ bool RDDToDSGrammar::chainable()
 bool RDDToDSGrammar::map()
 {
 	// if the map keyword is found
-	if (parse->curToken()
-		&& parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
-		&& !strcmp(parse->curToken()->getTokenName().c_str(), "map"))
-	{
-		*outFile << parse->curToken()->getTokenName(); // print it to the output file
-		// if a left parenthesis is found
-		if (parse->nextToken()
-			&& parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS)
-		{
-			*outFile << parse->curToken()->getTokenName(); // print it to the output file
-			std::string userFunction;
-			// if a mapUDF is found
-			if (parse->nextToken()
-				&& mapUDF(userFunction))
-			{
-				*outFile << userFunction; // print it to the output file
-				// if a right parenthesis is found
-				if (parse->curToken()
-					&& parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_PARENTHESIS)
-				{
-					*outFile << parse->curToken()->getTokenName() << std::endl; // print it and a newline to the output file
-					parse->nextToken();
-					return true;
-				}
-			}
-		}
-	}
-	return false;
+    if (parse->curToken()
+        && parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
+        && !strcmp(parse->curToken()->getTokenName().c_str(), "map"))
+    {
+        
+        *outFile << parse->curToken()->getTokenName(); // print it to the output file
+        // if a left parenthesis is found
+        if (parse->nextToken()
+            && parse->curToken()->getSymType() == Token::SYMTYPE_LEFT_PARENTHESIS)
+        {
+            *outFile << parse->curToken()->getTokenName(); // print it to the output file
+            std::string userFunction;
+            // if a mapUDF is found
+            if (parse->nextToken())
+            {    
+                if (mapUDF(userFunction)) 
+                {
+                    *outFile << userFunction; // print it to the output file
+                    // if a right parenthesis is found
+                    if (parse->curToken()
+                        && parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_PARENTHESIS)
+                    {
+                        *outFile << parse->curToken()->getTokenName() << std::endl; // print it and a newline to the output file
+                        parse->nextToken();
+                        return true;
+                    }
+                }
+                else 
+                {
+                    *outFile << userFunction;
+                    return true;
+                }
+            }
+        }
+    }
+    
+    return false;
 }
+
 
 /**
  * Production:
@@ -423,25 +453,25 @@ bool RDDToDSGrammar::sort()
 bool RDDToDSGrammar::done()
 {
 	if (parse->curToken()
-		&& parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
-		&& (!strcmp(parse->curToken()->getTokenName().c_str(), "reduce")
-	  || !strcmp(parse->curToken()->getTokenName().c_str(), "reduceByKey")))
-	{
-		if (reduce())
-		{
-			return true;
-		}
-	}
-	else if (parse->curToken()
-		&& parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
-		&& !strcmp(parse->curToken()->getTokenName().c_str(), "collect"))
-	{
-		if (collect())
-		{
-			return true;
-		}
-	}
-	return false;
+        && parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
+        && (!strcmp(parse->curToken()->getTokenName().c_str(), "reduce"))
+        )
+    {
+        if (reduce())
+        {
+            return true;
+        }
+    }
+    else if (parse->curToken()
+        && parse->curToken()->getID() == Token::IDTYPE_RESERVEDWORD
+        && !strcmp(parse->curToken()->getTokenName().c_str(), "collect"))
+    {
+        if (collect())
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -568,7 +598,7 @@ bool RDDToDSGrammar::mapUDF(std::string &udfString)
 			}
 		}
 	}
-	*outFile << std::endl << "<<<<<<ERROR>>>>>>" << std::endl << udfString << std::endl;
+	
   return false;
 }
 
@@ -1299,40 +1329,71 @@ bool RDDToDSGrammar::noParenExpr(std::string &udfString)
 bool RDDToDSGrammar::field(std::string &udfString)
 {
 	// if a period is found
-	if (parse->curToken()
-		&& (parse->curToken()->getSymType() == Token::SYMTYPE_PERIOD))
-	{
-		udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
-		// if an identifier is found
-		if (parse->nextToken()
-			&& (parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER))
-		{
-			udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
-			parse->nextToken();
-			return true;
-		}
-	}
-	// else if any op, any comparator, a right parenthesis, a right brace, a semicolon, or a comma is found
-	else if (parse->curToken()
-		&& (parse->curToken()->getSymType() == Token::SYMTYPE_PLUS
-		|| parse->curToken()->getSymType() == Token::SYMTYPE_MINUS
-		|| parse->curToken()->getSymType() == Token::SYMTYPE_STAR
-		|| parse->curToken()->getSymType() == Token::SYMTYPE_PERCENT
-		|| parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_PARENTHESIS
-		|| parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_BRACE
-		|| parse->curToken()->getSymType() == Token::SYMTYPE_SEMICOLON
-		|| parse->curToken()->getSymType() == Token::SYMTYPE_COMMA
-		|| parse->curToken()->getSymType() == Token::SYMTYPE_DOUBLE_EQUAL
-		|| parse->curToken()->getSymType() == Token::SYMTYPE_LT
-		|| parse->curToken()->getSymType() == Token::SYMTYPE_GT
-		|| parse->curToken()->getSymType() == Token::SYMTYPE_NT_EQUAL
-		|| parse->curToken()->getSymType() == Token::SYMTYPE_LT_EQUAL
-		|| parse->curToken()->getSymType() == Token::SYMTYPE_GT_EQUAL
-		|| !strcmp(parse->curToken()->getTokenName().c_str(), "else")))
-	{
-		return true;
-	}
-	return false;
+    if (parse->curToken()
+        && (parse->curToken()->getSymType() == Token::SYMTYPE_PERIOD))
+    {
+        udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+        // if an identifier is found
+        parse->nextToken();
+        
+        if (parse->curToken()
+            && (parse->curToken()->getID() == Token::IDTYPE_IDENTIFIER))
+        {
+            
+            udfString.append(parse->curToken()->getTokenName()); // add it to the string that's being constructed
+            parse->nextToken();
+            return true;
+        }
+        else if (parse->curToken()
+            && (!strcmp(parse->curToken()->getTokenName().c_str(), "split"))
+            || !strcmp(parse->curToken()->getTokenName().c_str(), "size"))
+        {
+            udfString.append(parse->curToken()->getTokenName());
+         
+            parse->nextToken();
+            while(parse->curToken()->getSymType() != Token::SYMTYPE_RIGHT_PARENTHESIS) {
+                udfString.append(parse->curToken()->getTokenName());
+                parse->nextToken();
+            }
+            udfString.append(parse->curToken()->getTokenName());
+            parse->nextToken();
+            field(udfString);
+        }
+        else if (!strcmp(parse->curToken()->getTokenName().c_str(), "map")
+            || !strcmp(parse->curToken()->getTokenName().c_str(), "sortBy")
+            || !strcmp(parse->curToken()->getTokenName().c_str(), "reduce")
+            || !strcmp(parse->curToken()->getTokenName().c_str(), "reduceByKey")
+            || !strcmp(parse->curToken()->getTokenName().c_str(), "filter")
+            || !strcmp(parse->curToken()->getTokenName().c_str(), "collect")
+            )
+        {   
+            //std::cout << "stop field\n";
+            return false;
+        }
+    }
+    // else if any op, any comparator, a right parenthesis, a right brace, a semicolon, or a comma is found
+    else if (parse->curToken()
+        && (parse->curToken()->getSymType() == Token::SYMTYPE_PLUS
+        || parse->curToken()->getSymType() == Token::SYMTYPE_MINUS
+        || parse->curToken()->getSymType() == Token::SYMTYPE_STAR
+        || parse->curToken()->getSymType() == Token::SYMTYPE_PERCENT
+        || parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_PARENTHESIS
+        || parse->curToken()->getSymType() == Token::SYMTYPE_RIGHT_BRACE
+        || parse->curToken()->getSymType() == Token::SYMTYPE_SEMICOLON
+        || parse->curToken()->getSymType() == Token::SYMTYPE_COMMA
+        || parse->curToken()->getSymType() == Token::SYMTYPE_DOUBLE_EQUAL
+        || parse->curToken()->getSymType() == Token::SYMTYPE_LT
+        || parse->curToken()->getSymType() == Token::SYMTYPE_GT
+        || parse->curToken()->getSymType() == Token::SYMTYPE_NT_EQUAL
+        || parse->curToken()->getSymType() == Token::SYMTYPE_LT_EQUAL
+        || parse->curToken()->getSymType() == Token::SYMTYPE_GT_EQUAL
+        || !strcmp(parse->curToken()->getTokenName().c_str(), "else")))
+    {
+        return true;
+    }
+    
+    
+    return false;
 }
 
 /**

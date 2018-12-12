@@ -137,7 +137,10 @@ bool Util::isReservedWord(std::string curString)
 		|| !curString.compare("collect")
 		|| !curString.compare("if")
 		|| !curString.compare("else")
-		|| !curString.compare("val"))
+		|| !curString.compare("val")
+		|| !curString.compare("size")
+		|| !curString.compare("split")
+		)
 	{
 		return true;
 	}
