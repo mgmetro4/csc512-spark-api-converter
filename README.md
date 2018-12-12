@@ -75,7 +75,7 @@ sortBy(\<func\>)        | map(row=>((\<func\>)(row), row)).orderBy("\_1").map(\_
 collect               | collect
 
 #### Grammar
-
+Located at /dataset_grammar.txt
 
 ### RDD to Dataframe
 
@@ -88,3 +88,4 @@ map(UDF)     | selectExpr(SQL)
 collect      | collect
 
 #### Grammar
+Located at /dataframe_grammar.txt
