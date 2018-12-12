@@ -1,0 +1,104 @@
+Part 2 (RDD -> Dataframe) - Input File Grammar
+
+<program> --> sc . <range> <mapsOrCollect>
+              [FIRST_PLUS = { sc }]
+
+<range> --> range ( <number> , <number> )
+            [FIRST_PLUS = { range }]
+
+<mapsOrCollect> --> . <mapsOrCollect0>
+                    [FIRST_PLUS = { . }]
+                | EOF
+
+<mapsOrCollect0> --> map ( <UDF> ) <mapsOrCollect>
+                     [FIRST_PLUS = { map }]
+                   | collect ( )
+                     [FIRST_PLUS = { collect }]
+
+<UDF> --> <id> => <statementBlock>
+          [FIRST_PLUS = { <id> }]
+
+<statementBlock> --> { <assignOrStmt> }
+                     [FIRST_PLUS = { { }]
+                   | <statement>
+                     [FIRST_PLUS = { <id>, <number>, (, if }]
+
+<assignOrStmt> --> <assignments>
+                   [FIRST_PLUS = { val }]
+                 | <statement>
+                   [FIRST_PLUS = { <id>, <number>, (, if }]
+
+<assignments> --> <assignment> <assignOrStmt>
+                  [FIRST_PLUS = { val }]
+
+<assignment> --> val <id> = <expression> ;
+                 [FIRST_PLUS = { val }]
+
+<statement> --> <noParenExpr>
+                [FIRST_PLUS = { <id>, <number>, if }]
+              | ( <expression> <parenExprOrTuple>
+                [FIRST_PLUS = { ( }]
+
+<parenExprOrTuple> --> <rightParenExpr>
+                       [FIRST_PLUS = { ) }]
+                     | <tuple>
+                       [FIRST_PLUS = { , }]
+
+<tuple> --> , <expression> <tuple0> )
+            [FIRST_PLUS = { , }]
+
+<tuple0> --> , <expression> <tuple0>
+             [FIRST_PLUS = { , }]
+           | EPSILON
+             [FIRST_PLUS = { ) }]
+
+<rightParenExpr> --> ) <opExpr>
+                     [FIRST_PLUS = { ) }]
+
+<noParenExpr> --> <id> <field> <opExpr>
+                  [FIRST_PLUS = { <id> }]
+                | <number> <opExpr>
+                  [FIRST_PLUS = { <number> }]
+                | if ( <boolExpr> ) <expression> else <expression>
+                  [FIRST_PLUS = { if }]
+
+<field> --> . <id>
+            [FIRST_PLUS = { . }]
+          | EPSILON
+            [FIRST_PLUS = { +, -, *, %, ), }, ;, ,, else, ==, <, >, !=, <=, >= }]
+
+<expression> --> <noParenExpr>
+                 [FIRST_PLUS = { <id>, <number>, if }]
+               | ( <expression> <rightParenExpr>
+                 [FIRST_PLUS = { ( }]
+
+
+<opExpr> --> <op> <expression> <opExpr>
+                  [FIRST_PLUS = { +, -, *, % }]
+             | EPSILON
+                  [FIRST_PLUS = { ), }, ;, ,, else, ==, <, >, !=, <=, >= }]
+
+<boolExpr> --> <expression> <comp> <expression>
+               [FIRST_PLUS = { <id>, <number>, (, if }]
+
+<op> --> +
+         [FIRST_PLUS = { + }]
+       | -
+         [FIRST_PLUS = { - }]
+       | *
+         [FIRST_PLUS = { * }]
+       | %
+         [FIRST_PLUS = { % }]
+
+<comp> --> ==
+           [FIRST_PLUS = { == }]
+         | <
+           [FIRST_PLUS = { < }]
+         | >
+           [FIRST_PLUS = { > }]
+         | !=
+           [FIRST_PLUS = { != }]
+         | >=
+           [FIRST_PLUS = { >= }]
+         | <=
+           [FIRST_PLUS = { <= }]
