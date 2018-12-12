@@ -8,12 +8,13 @@ How To Compile
 
 1. cd into /transformer directory
 2. make
-3. Run RDD to Dataset via ./Transformer -ds test1.scala
+3. move the RDD API .scala file into the /transformer directory
+4. Run RDD to Dataset via ./Transformer -ds test1.scala
    or to Dataframe via ./Transformer -df test1.scala
-   where test1.scala is the RDD code you want to transform.
+   where test1.scala is the RDD file you want to transform.
    This file can be named anything as long as it ends in .scala
 
-4. Output will be named test1_gen.scala
+5. Output will be named test1_gen.scala
 
 
 --------------------------------------------------
