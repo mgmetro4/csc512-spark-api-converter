@@ -17,6 +17,7 @@ How To Compile
 --------------------------------------------------
 How To Test Dataset
 --------------------------------------------------
+ ./Transformer -ds test1.scala
 
 All the RDD test cases that can be transformed to Dataset
 are located in /csc512-spark-api-converter/part0/all_dataset_tests
@@ -31,6 +32,8 @@ test cases for easy viewing.
 --------------------------------------------------
 How To Test Dataframe
 --------------------------------------------------
+ ./Transformer -df test1.scala
+ 
 All the RDD test cases that can be transformed to Dataframe
 are located in /csc512-spark-api-converter/part0/all_dataframe_tests
 
