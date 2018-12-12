@@ -8,7 +8,6 @@ Part 2 (RDD -> Dataframe) - Input File Grammar
 
 <mapsOrCollect> --> . <mapsOrCollect0>
                     [FIRST_PLUS = { . }]
-                | EOF
 
 <mapsOrCollect0> --> map ( <UDF> ) <mapsOrCollect>
                      [FIRST_PLUS = { map }]
